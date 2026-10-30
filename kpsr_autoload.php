@@ -8,7 +8,7 @@ spl_autoload_register(function($path) {
     $split_path = parsePSR4Path($path);
 
     if(!$split_path) {
-        return -1;
+        return;
     }
 
     $config = include("kpsr_config.php");
@@ -17,6 +17,7 @@ spl_autoload_register(function($path) {
 
     foreach ($psr_dirs as $classpath => $dir) {
         //TODO: this does partial matches of class names (i.e. prefix App would incorrectly match Application\SomeClass - prevent this)
+        // also: prefixes must be matched from longest to shortest.
         if(str_starts_with($path, $classpath)) {
             $filepath_prefix = $dir;
             $prefix = $classpath;
@@ -24,7 +25,17 @@ spl_autoload_register(function($path) {
         }
     }
 
-    require_once turnPrefixedPSR4IntoFilepath($prefix, $filepath_prefix, $path);
+    // we dont have a prefix, burn everything down; all hope is lost.
+    if(!$prefix) {
+        return;
+    }
+
+    $filepath = turnPrefixedPSR4IntoFilepath($prefix, $filepath_prefix, $path);
+    if ($filepath) {
+        require_once $filepath;
+    }
+
+    return;
 });
 
 function parsePSR4Path(string $path): array|int {
@@ -41,9 +52,6 @@ function parsePSR4Path(string $path): array|int {
         $curToken = $path[$i];
         if($i+1 < $pathLen) {
             $nextToken = $path[$i + 1];
-        }
-        if($i > 1) {
-            $prevToken = $path[$i - 1];
         }
         if($curToken != $TOKEN_separator) {
             $curElem .= $curToken;
@@ -87,6 +95,9 @@ function removePSR4Prefix(array $split_path, array $split_prefix): array|int {
         }
     }
 
+    //TODO: this is stupid. make it less stupid.
+    $split_path = array_values($split_path);
+
     return $split_path;
 }
 
@@ -105,15 +116,15 @@ function turnPrefixedPSR4IntoFilepath(string $prefix, string $prefixFilePath, st
     $unprefixed_path_len = count($unprefixed_path);
     foreach ($unprefixed_path as $index => $name) {
         $path .= $name;
-        if($index < $unprefixed_path_len) {
+        if($index < $unprefixed_path_len - 1) {
             $path .= "/";
         }
     }
 
     $path .= ".php";
 
-    if(!file_exists($path)) {
-        //return -1;
+    if(!is_file($path)) {
+        return -1;
     }
     
     return $path;
