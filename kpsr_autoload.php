@@ -4,7 +4,7 @@
 $config = include("kpsr_config.php");
 $err_enabled = $config["debug"]["throw_errors_on_fail"];
 
-spl_autoload_register(function($path) use ($config, $err_enabled) {
+spl_autoload_register(function($path) use ($config) {
     $baseDir = __DIR__;
     $filepath = "";
     $filepath_prefix = "";
@@ -12,7 +12,7 @@ spl_autoload_register(function($path) use ($config, $err_enabled) {
     $split_path = parsePSR4Path($path);
 
     if(!$split_path) {
-        return _throw_error("Your FQN $path could not be parsed as a PSR4 namespace. Please check if you have at least one toplevel namespace and no back-to-back backslashes.", $err_enabled);
+        return _throw_error("Your FQN $path could not be parsed as a PSR4 namespace. Please check if you have at least one toplevel namespace and no back-to-back backslashes.");
     }
     
     $psr_dirs = $config["psr4"];
@@ -52,7 +52,7 @@ spl_autoload_register(function($path) use ($config, $err_enabled) {
         $filepath_prefix = $currentMatchedPrefixDir;
         $prefix = $currentMatchedPrefix;
     } else {
-        return _throw_error("No known matched PSR prefix. The namespace of the class $path might be wrong?", $err_enabled);
+        return _throw_error("No known matched PSR prefix. The namespace of the class $path might be wrong?");
     }
 
     $filepath = turnPrefixedPSR4IntoFilepath($prefix, $filepath_prefix, $path);
@@ -121,7 +121,6 @@ function removePSR4Prefix(array $split_path, array $split_prefix): ?array {
 }
 
 function turnPrefixedPSR4IntoFilepath(string $prefix, string $prefixFilePath, string $path): string|int {
-    global $err_enabled;
     $parsed_prefix = parsePSR4Path(rtrim($prefix, "\\"));
     $parsed_path = parsePSR4Path($path);
     $prefixFilePath = trim($prefixFilePath, "/");
@@ -144,15 +143,16 @@ function turnPrefixedPSR4IntoFilepath(string $prefix, string $prefixFilePath, st
     $path .= ".php";
 
     if(!is_file($path)) {
-        _throw_error("The file \"$path\", which you are trying to include starting at directory \"$prefixFilePath\", does not exist. Try checking if you have a typo in your namespaces or PSR4 prefix config.", $err_enabled);
+        _throw_error("The file \"$path\", which you are trying to include starting at directory \"$prefixFilePath\", does not exist. Try checking if you have a typo in your namespaces or PSR4 prefix config.");
         return 0;
     }
     
     return $path;
 }
 
-function _throw_error(string $msg, bool $enabled): void {
-    if($enabled) {
+function _throw_error(string $msg): void {
+    global $err_enabled;
+    if($err_enabled) {
         throw new PSR4Exception($msg);
     }
 }
