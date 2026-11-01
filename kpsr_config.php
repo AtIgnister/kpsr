@@ -2,6 +2,7 @@
 
 return [
     "psr4" => [
+        "" => "fallback/",
         "Kami\\" => "src/",
         "Kami\\Kpsr\\" => ["src/", "ext/"]
     ],

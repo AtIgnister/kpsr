@@ -10,3 +10,5 @@ require_once "../kpsr_autoload.php";
 
 $testExtended = new ExtendedClass();
 $testExtended->extended();
+
+$fb = new \Fallback\Fallback();

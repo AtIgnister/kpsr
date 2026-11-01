@@ -26,9 +26,11 @@ spl_autoload_register(function($path) use ($config) {
     $currentMatchedPrefix = "";
     $currentMatchedPrefixDir = "";
     foreach ($psr_dirs as $classpath => $dir) {
-        $split_prefix = parsePSR4Path(rtrim($classpath, "\\"));
+        $split_prefix = $classpath === ""
+        ? []
+        : parsePSR4Path(rtrim($classpath, "\\"));
 
-        if (!$split_prefix) {
+        if ($split_prefix === 0) {
             continue;
         }
 
@@ -53,7 +55,7 @@ spl_autoload_register(function($path) use ($config) {
         }
     }
 
-    if($currentMatchedPrefix) {
+    if ($currentMatchedPrefix !== null) {
         $filepath_prefix = $currentMatchedPrefixDir;
         $prefix = $currentMatchedPrefix;
     } else {
@@ -67,7 +69,6 @@ spl_autoload_register(function($path) use ($config) {
     foreach ($filepath_prefix as $name => $prefix_path) { 
         $attempted_match = turnPrefixedPSR4IntoFilepath($prefix, $prefix_path, $path);
         if($attempted_match == true) {
-            //var_dump($filepath);
             $filepath = $attempted_match;
             break;
         }
@@ -148,17 +149,27 @@ function removePSR4Prefix(array $split_path, array $split_prefix): ?array {
 }
 
 function turnPrefixedPSR4IntoFilepath(string $prefix, string $prefixFilePath, string $path): string|int {
-    $parsed_prefix = parsePSR4Path(rtrim($prefix, "\\"));
+    $parsed_prefix = false;
+    if($prefix !== "") {
+        $parsed_prefix = parsePSR4Path(rtrim($prefix, "\\"));
+        if(!$parsed_prefix) {
+            return 0;
+        }
+    }
+
     $parsed_path = parsePSR4Path($path);
     $prefixFilePath = trim($prefixFilePath, "/");
 
-    if(!$parsed_prefix || !$parsed_path) {
+    if(!$parsed_path) {
         return 0;
     }
 
-    $unprefixed_path = removePSR4Prefix($parsed_path, $parsed_prefix);
-    if(empty($unprefixed_path)) {
-        _throw_error("No remainder exists after parsing prefix of $path. Cannot locate class file.");
+    $unprefixed_path = $parsed_path;
+    if($parsed_prefix) {
+        $unprefixed_path = removePSR4Prefix($parsed_path, $parsed_prefix);
+        if ($unprefixed_path === null || empty($unprefixed_path)) {
+            return 0;
+        }
     }
 
     $path = __DIR__ . "/$prefixFilePath". "/";
