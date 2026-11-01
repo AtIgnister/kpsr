@@ -13,6 +13,12 @@ spl_autoload_register(function($path) use ($config) {
     if(!$split_path) {
         return _throw_error("Your FQN $path could not be parsed as a PSR4 namespace. Please check if you have at least one toplevel namespace and no back-to-back backslashes.");
     }
+
+    foreach ($config["psr4"] as $namespace => $dir) {
+        if($namespace && !str_ends_with($namespace, "\\")) {
+             return _throw_error("A non-empty PSR-4 prefix must end with a namespace separator.", true);
+        }
+    }
     
     $psr_dirs = $config["psr4"];
 
@@ -54,18 +60,21 @@ spl_autoload_register(function($path) use ($config) {
         return _throw_error("No known matched PSR prefix. The namespace of the class $path might be wrong?");
     }
 
-    if(is_array($filepath_prefix)) {
-        foreach ($filepath_prefix as $name => $prefix_path) { 
-            $attempted_match = turnPrefixedPSR4IntoFilepath($prefix, $prefix_path, $path);
-            if($attempted_match == true) {
-                $filepath = $attempted_match;
-                break;
-            }
-        }
+    if(is_string($filepath_prefix)) {
+        $filepath_prefix = [$filepath_prefix];
+    }
 
-        if(!$filepath) {
-            _throw_error("The file \"$path\", which you are trying to include, does not exist. Try checking if you have a typo in your namespaces or PSR4 prefix config.");
+    foreach ($filepath_prefix as $name => $prefix_path) { 
+        $attempted_match = turnPrefixedPSR4IntoFilepath($prefix, $prefix_path, $path);
+        if($attempted_match == true) {
+            //var_dump($filepath);
+            $filepath = $attempted_match;
+            break;
         }
+    }
+
+    if(!$filepath) {
+        _throw_error("The file \"$path\", which you are trying to include, does not exist. Try checking if you have a typo in your namespaces or PSR4 prefix config.");
     }
 
     if ($filepath) {
@@ -161,9 +170,9 @@ function turnPrefixedPSR4IntoFilepath(string $prefix, string $prefixFilePath, st
     return $path;
 }
 
-function _throw_error(string $msg): void {
+function _throw_error(string $msg, $force = false): void {
     global $err_enabled;
-    if($err_enabled) {
+    if($err_enabled || $force) {
         throw new PSR4Exception($msg);
     }
 }

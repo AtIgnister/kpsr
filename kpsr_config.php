@@ -2,7 +2,7 @@
 
 return [
     "psr4" => [
-        "Kami" => "src/",
+        "Kami\\" => "src/",
         "Kami\\Kpsr\\" => ["src/", "ext/"]
     ],
     "debug" => [
