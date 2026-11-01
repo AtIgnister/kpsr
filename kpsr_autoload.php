@@ -1,5 +1,4 @@
 <?php
-// TODO: Complete PSR-4 naming validation
 $config = include("kpsr_config.php");
 $err_enabled = $config["debug"]["throw_errors_on_fail"];
 
@@ -127,6 +126,7 @@ function parsePSR4Path(string $path): array|int {
 
     foreach ($parsed as $segment) {
         if (!isValidIdentifier($segment)) {
+            _throw_error("segement $segment is not a valid PSR4 namespace identifier.");
             return 0;
         }
     }
