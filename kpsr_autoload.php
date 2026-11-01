@@ -22,8 +22,8 @@ spl_autoload_register(function($path) use ($config) {
     $psr_dirs = $config["psr4"];
 
     $maxLenMatched = -1;
-    $currentMatchedPrefix = "";
-    $currentMatchedPrefixDir = "";
+    $currentMatchedPrefix = null;
+    $currentMatchedPrefixDir = null;
     foreach ($psr_dirs as $classpath => $dir) {
         $split_prefix = $classpath === ""
         ? []
@@ -198,7 +198,7 @@ function _throw_error(string $msg, $force = false): void {
 }
 
 function isValidIdentifier(string $name): bool {
-    return preg_match('/^[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*$/D', $name) === 1;
+    return preg_match('/^[\p{L}_][\p{L}\p{N}_]*$/uD', $name) === 1;
 }
 
 class PSR4Exception extends Exception {};
