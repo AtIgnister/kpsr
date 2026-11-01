@@ -1,6 +1,5 @@
 <?php
 // TODO: Complete PSR-4 naming validation
-// TODO: Multiple directories per prefix
 $config = include("kpsr_config.php");
 $err_enabled = $config["debug"]["throw_errors_on_fail"];
 
@@ -55,7 +54,20 @@ spl_autoload_register(function($path) use ($config) {
         return _throw_error("No known matched PSR prefix. The namespace of the class $path might be wrong?");
     }
 
-    $filepath = turnPrefixedPSR4IntoFilepath($prefix, $filepath_prefix, $path);
+    if(is_array($filepath_prefix)) {
+        foreach ($filepath_prefix as $name => $prefix_path) { 
+            $attempted_match = turnPrefixedPSR4IntoFilepath($prefix, $prefix_path, $path);
+            if($attempted_match == true) {
+                $filepath = $attempted_match;
+                break;
+            }
+        }
+
+        if(!$filepath) {
+            _throw_error("The file \"$path\", which you are trying to include, does not exist. Try checking if you have a typo in your namespaces or PSR4 prefix config.");
+        }
+    }
+
     if ($filepath) {
         require_once $filepath;
     }
@@ -143,7 +155,6 @@ function turnPrefixedPSR4IntoFilepath(string $prefix, string $prefixFilePath, st
     $path .= ".php";
 
     if(!is_file($path)) {
-        _throw_error("The file \"$path\", which you are trying to include starting at directory \"$prefixFilePath\", does not exist. Try checking if you have a typo in your namespaces or PSR4 prefix config.");
         return 0;
     }
     
