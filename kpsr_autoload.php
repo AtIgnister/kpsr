@@ -127,7 +127,6 @@ function parsePSR4Path(string $path): array|int {
     foreach ($parsed as $segment) {
         if (!isValidIdentifier($segment)) {
             _throw_error("segement $segment is not a valid PSR4 namespace identifier.");
-            return 0;
         }
     }
 
