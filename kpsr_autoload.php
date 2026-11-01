@@ -124,6 +124,12 @@ function parsePSR4Path(string $path): array|int {
         }
     }
 
+    foreach ($parsed as $segment) {
+        if (!isValidIdentifier($segment)) {
+            return 0;
+        }
+    }
+
     return $parsed;
 }
 
@@ -151,6 +157,9 @@ function turnPrefixedPSR4IntoFilepath(string $prefix, string $prefixFilePath, st
     }
 
     $unprefixed_path = removePSR4Prefix($parsed_path, $parsed_prefix);
+    if(empty($unprefixed_path)) {
+        _throw_error("No remainder exists after parsing prefix of $path. Cannot locate class file.");
+    }
 
     $path = __DIR__ . "/$prefixFilePath". "/";
     $unprefixed_path_len = count($unprefixed_path);
@@ -175,6 +184,10 @@ function _throw_error(string $msg, $force = false): void {
     if($err_enabled || $force) {
         throw new PSR4Exception($msg);
     }
+}
+
+function isValidIdentifier(string $name): bool {
+    return preg_match('/^[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*$/D', $name) === 1;
 }
 
 class PSR4Exception extends Exception {};
