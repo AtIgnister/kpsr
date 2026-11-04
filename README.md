@@ -1,0 +1,1 @@
+PHP PSR4 autoloader i wrote because i was bored. There's not much practical reason to use this over composer, but i suppose you can do that if your project has no external dependencies and you feel like it for whatever reason.
